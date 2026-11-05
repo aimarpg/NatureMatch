@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from .routes import health, observations, assessments
+
+from .routes import assessments, health, observations
 
 app = FastAPI(title="NatureMatch API", version="0.1.0")  # OpenAPI at /docs, /openapi.json
 app.include_router(health.router)

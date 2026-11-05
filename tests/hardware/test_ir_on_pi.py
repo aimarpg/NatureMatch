@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.hardware   # run on the Pi: pytest -m hardware
 
 

@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from naturematch.common.models import Observation
 
 router = APIRouter(tags=["observations"])

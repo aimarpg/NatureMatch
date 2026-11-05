@@ -1,4 +1,5 @@
 import argparse
+
 from naturematch.common import logging as nmlog
 from naturematch.common.config import load_yaml
 
