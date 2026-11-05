@@ -1,0 +1,6 @@
+apiVersion: 1
+providers:
+  - name: naturematch
+    folder: NatureMatch
+    type: file
+    options: {path: /var/lib/grafana/dashboards}

@@ -1,0 +1,29 @@
+[project]
+name = "naturematch"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2", "pydantic-settings>=2", "pyyaml",
+  "fastapi", "uvicorn[standard]", "httpx",
+  "influxdb-client",
+]
+
+[project.optional-dependencies]
+pi  = ["gpiozero", "lgpio", "grove.py", "smbus2", "seeed-python-dht"]
+dev = ["pytest", "pytest-cov", "ruff", "mypy", "pre-commit"]
+
+[project.scripts]
+nm-station = "naturematch.station.main:main"
+nm-api     = "naturematch.service.main:main"
+
+[tool.pytest.ini_options]
+markers = ["hardware: needs a real Raspberry Pi + Grove hardware"]
+addopts = "-m 'not hardware'"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

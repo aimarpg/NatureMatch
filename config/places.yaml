@@ -1,0 +1,9 @@
+# Surveyed place data. Example places must be labelled example: true
+places:
+  - id: NM-01
+    name: Campus garden (monitored)
+    example: false
+    step_free: true
+    surface: paved
+    tables: true
+    benches: true

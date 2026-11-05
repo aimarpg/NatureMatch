@@ -1,0 +1,6 @@
+quiet_studying:
+  weights: {noise: 0.45, light: 0.20, occupancy: 0.25, temperature: 0.10}
+  prefers_busy: false
+socialising:
+  weights: {occupancy: 0.50, temperature: 0.25, noise: 0.05, light: 0.20}
+  prefers_busy: true

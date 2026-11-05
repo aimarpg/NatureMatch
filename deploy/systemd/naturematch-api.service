@@ -1,0 +1,15 @@
+[Unit]
+Description=NatureMatch API
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/opt/naturematch
+EnvironmentFile=/opt/naturematch/.env
+ExecStart=/opt/naturematch/.venv/bin/nm-api
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

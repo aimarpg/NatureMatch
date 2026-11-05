@@ -1,0 +1,15 @@
+[Unit]
+Description=NatureMatch station
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/opt/naturematch
+EnvironmentFile=/opt/naturematch/.env
+ExecStart=/opt/naturematch/.venv/bin/nm-station --config /opt/naturematch/config/station.yaml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

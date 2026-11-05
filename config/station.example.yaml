@@ -1,0 +1,18 @@
+station_id: NM-01
+simulate: false
+sampling:
+  environment_s: 10
+  stale_after_s: 60
+ir:
+  outer_pin: 5      # beam A (outside)
+  inner_pin: 6      # beam B (inside)
+  max_gap_ms: 1500
+  initial_count: 0
+sensors:
+  dht:    {enabled: true,  pin: 16}
+  sound:  {enabled: true,  adc_channel: 0}
+  light:  {enabled: true,  adc_channel: 2}
+  uv:     {enabled: false, adc_channel: 4}
+  air:    {enabled: false, adc_channel: 6}
+led_bar: {enabled: true, pin: 24}
+api_url: http://localhost:8000

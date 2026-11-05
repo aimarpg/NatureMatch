@@ -1,0 +1,25 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    ports: ["8086:8086"]
+    env_file: ../../.env
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${NM_INFLUX_TOKEN}
+      DOCKER_INFLUXDB_INIT_ORG: ${NM_INFLUX_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${NM_INFLUX_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${NM_INFLUX_TOKEN}
+    volumes: [influx-data:/var/lib/influxdb2]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports: ["3000:3000"]
+    depends_on: [influxdb]
+    env_file: ../../.env
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
+volumes: {influx-data: {}, grafana-data: {}}
