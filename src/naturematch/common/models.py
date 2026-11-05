@@ -1,8 +1,10 @@
 """Shared data model. Every module imports from here; nothing else defines records."""
 from __future__ import annotations
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import uuid4
+
 from pydantic import BaseModel, Field
 
 
@@ -20,14 +22,14 @@ class Observation(BaseModel):
     metric: str            # temperature | humidity | noise | light | uv | air | occupancy
     value: float | None
     unit: str              # C | % | dB | lx | idx | people
-    ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ts: datetime = Field(default_factory=lambda: datetime.now(UTC))
     quality: Quality = Quality.OK
 
 
 class CrossingEvent(BaseModel):
     station_id: str
     direction: str         # "in" | "out" | "incomplete"
-    ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ts: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class Assessment(BaseModel):

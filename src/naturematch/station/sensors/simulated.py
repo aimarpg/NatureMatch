@@ -1,5 +1,7 @@
 import random
+
 from naturematch.common.models import Observation, Quality
+
 from .base import Sensor
 
 

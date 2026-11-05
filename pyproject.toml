@@ -27,3 +27,6 @@ src = ["src", "tests"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
