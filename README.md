@@ -9,9 +9,9 @@ IoT station (Raspberry Pi 5) + API + activity assessment + Grafana. See `docs/`.
 - `src/naturematch/web`        static web UI
 - `deploy/`                    systemd units, Docker stack (InfluxDB, Grafana)
 
-## Quick start
-    make install && cp .env.example .env && cp config/station.example.yaml config/station.yaml
-    make stack-up && make run-api && make run-station
+## Starting Sprint 1
+
+Follow the [Sprint 1 task guide](docs/scrum/sprint-1.md) for the setup tasks, sensor tests and starting order. The existing scaffold and its commands need to be checked in [#47](https://github.com/aimarpg/NatureMatch/issues/47) before they are presented as verified installation instructions.
 
 # Project description
 
@@ -19,7 +19,7 @@ IoT station (Raspberry Pi 5) + API + activity assessment + Grafana. See `docs/`.
 
 NatureMatch is a proposed Internet of Things system to help people choose nearby green spaces that suit their intended activity, available time, preferences and access needs. Connected monitoring stations would measure visitor movements and environmental conditions, while a web application would turn those measurements into explained recommendations for studying, running, relaxing or meeting others outdoors.
 
-**Project status: proposal and planning. Implementation has not started.** The hardware, software and features described below are planned work, not existing capabilities. This README summarizes the [project proposal](Docs/IoTChallenge.pdf).
+**Project status: proposal and planning, with an initial repository scaffold.** The hardware, software and features described below are planned work, not validated capabilities. This README summarizes the [project proposal](Documents/IoTChallenge.pdf).
 
 ## Purpose and intended users
 
@@ -117,22 +117,23 @@ Environmental goals include modular, repairable hardware, measured power consump
 
 ## Planned development stages
 
-The proposal outlines five two-week sprints. These are an initial sequence, not completed milestones or fixed delivery dates.
+The proposal originally outlined five stages. The later [initial project plan](Documents/Project%20Initial%20Plan.pdf) narrows that sequence to three dated sprints, which the GitHub backlog follows. These remain planned outcomes, not completed milestones.
 
-| Stage | Planned outcome |
+| Sprint | Planned outcome |
 | --- | --- |
-| 1 · Entrance counting | Wire infrared pairs, implement crossing logic and compare estimates with manual counts |
-| 2 · Environmental monitoring | Read sensors in Python, timestamp and log data, and label experimental readings |
-| 3 · Data flow | Implement HTTP/REST GET and POST operations, JSON storage flow, InfluxDB and Grafana |
-| 4 · Recommendations | Add access filtering, activity ranking, a visitor web interface and LED feedback |
-| 5 · Integration and demonstration | Add optional NFC sessions, conduct the entrance field test and prepare documentation and the final presentation |
+| 1 · 3–17 November 2026 | Set up the project and board, test the selected sensors and LED, define shared records, compare entrance counts with manual observations and show local station status |
+| 2 · 17 November–3 December 2026 | Connect station acquisition to HTTP/JSON, storage, Grafana and a simple interface for quiet studying and socialising with access checks |
+| 3 · 3–11 December 2026 | Validate the integrated prototype, check reproducible setup and prepare documentation, the release and submission |
+
+The dated plan selects infrared, temperature/humidity, noise and light for Sprint 1; UV, gas sensing and NFC remain optional. See the [Sprint 1 task guide](docs/scrum/sprint-1.md) for the issue list and module boundaries.
 
 ## Repository and getting started
 
-At this stage, the repository contains project documentation. There is no runnable application, dependency configuration or automated test suite yet. Setup, wiring, execution and test instructions will be added as implementation decisions are made and verified.
+The repository contains project documentation and an initial source, configuration and tooling scaffold, including test files and unfinished sensor adapters. This supersedes the earlier documentation-only description; those files do not establish a working or hardware-validated application. Setup, wiring, execution and test instructions must be checked and updated as the Sprint 1 tasks are completed.
 
-- [Project proposal](Docs/IoTChallenge.pdf): system purpose, architecture, scope, risks and initial sprint plan.
-- [Initial project plan](Docs/Project%20Initial%20Plan.pdf): additional planning document.
+- [Project proposal](Documents/IoTChallenge.pdf): system purpose, architecture, scope, risks and initial sprint plan.
+- [Initial project plan](Documents/Project%20Initial%20Plan.pdf): dated three-sprint development plan.
+- [Sprint 1 task guide](docs/scrum/sprint-1.md): clear issue names, module responsibilities and starting order.
 - [Agent instructions](AGENTS.md): repository guidance for future coding agents.
 
 ## Team
