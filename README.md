@@ -131,6 +131,46 @@ The dated plan selects infrared, temperature/humidity, noise and light for Sprin
 
 ## Repository and getting started
 
+### Standalone temperature/humidity test
+
+The [base sensor test](src/naturematch/tools/hardware/read_temperature_humidity.py)
+is implemented for **Grove DHT11/DHT22 only**, using the
+[Seeed Python DHT driver](https://github.com/Seeed-Studio/Seeed_Python_DHT).
+The physical sensor model, voltage/interface compatibility, wiring and Pi 5 driver
+support must be confirmed before use. D16/BCM 16 in the
+[pin inventory](docs/hardware/pin-inventory.md) is only a provisional reservation.
+I2C sensors such as DHT20/SHT31 require a different driver; this script does not support them.
+
+In a Raspberry Pi virtual environment with compatible `grove.py` and
+`seeed-python-dht` installed, the following is an example **only after confirming
+a DHT11 on BCM 16**:
+
+```bash
+python src/naturematch/tools/hardware/read_temperature_humidity.py --model 11 --pin 16
+```
+
+Use `--model 22` for a confirmed DHT22. The default is ten attempts, at least two
+seconds apart; change these with `--samples` and `--interval`. Stop with Ctrl+C.
+`--help` works without hardware dependencies. Each JSON line includes station ID
+(`--station-id`, default `sensor-test`), UTC observation time, units and quality.
+Readings are experimental and are not evidence of calibrated accuracy. Failed reads
+produce null values with `missing`/`invalid` quality; they never reuse an old value.
+Exit status is 0 if every attempt produced an in-range reading, 1 for initialization
+or any reading failure, 2 for invalid arguments, and 130 for interruption during sampling.
+
+The script intentionally uses the driver's private `_read()` single-attempt method:
+its public `read()` can silently substitute cached readings or initial zeros after
+failure. Check this interface when upgrading the driver. Output is diagnostic and
+is not integrated with the station, storage or shared Observation model.
+
+Software-only checks (mocked hardware) can run without third-party packages:
+
+```bash
+python -m unittest discover -s tests/unit -p test_temperature_humidity_tool.py
+```
+
+Physical sensor operation and Pi 5 compatibility have not been validated.
+
 The repository contains project documentation and an initial source, configuration and tooling scaffold, including test files and unfinished sensor adapters. This supersedes the earlier documentation-only description; those files do not establish a working or hardware-validated application. Setup, wiring, execution and test instructions must be checked and updated as the Sprint 1 tasks are completed.
 
 - [Project proposal](Documents/IoTChallenge.pdf): system purpose, architecture, scope, risks and initial sprint plan.
