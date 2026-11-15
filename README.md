@@ -13,6 +13,8 @@ IoT station (Raspberry Pi 5) + API + activity assessment + Grafana. See `docs/`.
 
 Follow the [Sprint 1 task guide](docs/scrum/sprint-1.md) for the setup tasks, sensor tests and starting order. The existing scaffold and its commands need to be checked in [#47](https://github.com/aimarpg/NatureMatch/issues/47) before they are presented as verified installation instructions.
 
+**Hardware update (15 November 2026):** the available counting hardware is two ultrasonic distance sensors, replacing the proposal's infrared pairs. The reported inventory also includes light, temperature/humidity, sound and an NFC reader. See the [wiring and pin inventory](docs/hardware/pin-inventory.md) for proposed socket reservations, required model/voltage checks and the revised counting test approach. Exact module revisions and Pi 5 driver compatibility remain unverified. The original PDFs and infrared scaffold have not been converted into an ultrasonic implementation; descriptions of infrared below refer to the original proposal. NFC remains optional for the MVP, and availability of the planned LED bar and activity selector is unconfirmed.
+
 # Project description
 
 **IoT for reconnecting with nature** · IoT Challenge 2026–27

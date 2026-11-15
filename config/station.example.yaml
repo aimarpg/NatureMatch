@@ -1,3 +1,7 @@
+# Legacy infrared scaffold, NOT a verified wiring guide or ultrasonic setup.
+# The current hardware uses two ultrasonic sensors; see
+# docs/hardware/pin-inventory.md for provisional reservations and required checks.
+# Distance acquisition/configuration and counting integration remain unimplemented.
 station_id: NM-01
 simulate: false
 sampling:
