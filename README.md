@@ -171,6 +171,40 @@ python -m unittest discover -s tests/unit -p test_temperature_humidity_tool.py
 
 Physical sensor operation and Pi 5 compatibility have not been validated.
 
+### Standalone noise sensor test
+
+The [noise sensor test](src/naturematch/tools/hardware/read_noise.py) reads an
+analog Grove sound module through the Grove Base Hat ADC. The exact module model
+is unconfirmed. It reports experimental raw ADC counts (0–4095), **not calibrated
+sound levels in dB**, and does not record or transmit audio.
+
+Confirm the module model, voltage/interface compatibility, wiring and Pi 5 driver
+support before use. A0 is a provisional socket reservation. In a Raspberry Pi
+environment with compatible `grove.py` installed and Base Hat I2C configured,
+after confirming A0, run:
+
+```bash
+python src/naturematch/tools/hardware/read_noise.py --channel 0
+```
+
+`--channel` selects a HAT ADC channel, not a BCM GPIO number. The default is ten
+attempts two seconds apart; `--samples`, `--interval` and `--station-id` can
+change those values. `--help` works without hardware dependencies. Each JSON line
+contains the station ID, UTC time, module/channel, raw value/unit and quality.
+Failed reads produce `null` with `missing` or `invalid` quality; previous values
+are never reused. Driver messages go to stderr to preserve JSON output. Exit
+codes are 0 for all in-range reads, 1 for initialization or any read failure,
+2 for argument errors and 130 for Ctrl+C during sampling. In-range readings
+remain experimental; a numeric ADC result alone does not establish accuracy.
+
+Software-only checks with mocked ADC hardware:
+
+```bash
+python -m unittest discover -s tests/unit -p test_noise_tool.py
+```
+
+Physical sensor operation and Pi 5 compatibility have not been validated.
+
 ### Standalone light sensor test
 
 The [light sensor test](src/naturematch/tools/hardware/read_light.py) targets the
