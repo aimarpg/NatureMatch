@@ -16,12 +16,18 @@ from datetime import UTC, datetime
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--channel", default=0, type=int, help="Confirmed HAT ADC channel (A0=0)")
+    parser.add_argument(
+        "--address", default=0x04, type=lambda value: int(value, 0),
+        help="7-bit HAT ADC I2C address (default: 0x04)",
+    )
     parser.add_argument("--station-id", default="sensor-test")
     parser.add_argument("--samples", type=int, default=10, help="Number of attempts (default: 10)")
     parser.add_argument("--interval", type=float, default=2.0, help="Seconds between attempts (>0)")
     args = parser.parse_args(argv)
     if not 0 <= args.channel <= 7:
         parser.error("--channel must be a HAT ADC channel between 0 and 7")
+    if not 0x03 <= args.address <= 0x77:
+        parser.error("--address must be a 7-bit I2C address between 0x03 and 0x77")
     if args.samples < 1:
         parser.error("--samples must be positive")
     if not math.isfinite(args.interval) or args.interval <= 0:
@@ -33,9 +39,10 @@ def main(argv=None):
         with contextlib.redirect_stdout(sys.stderr):
             from grove.adc import ADC
 
-            adc = ADC()
+            adc = ADC(address=args.address)
     except (Exception, SystemExit) as exc:
-        print(f"Cannot initialize sound sensor ADC: {exc}. Check grove.py installation, "
+        print(f"Cannot initialize sound sensor ADC at 0x{args.address:02x}: {exc}. "
+              "Check grove.py installation, "
               "Base Hat/I2C setup and Pi 5 driver compatibility.", file=sys.stderr)
         return 1
 
@@ -65,6 +72,7 @@ def main(argv=None):
                 "ts": datetime.now(UTC).isoformat(),
                 "model": "Grove analog sound sensor (model unconfirmed)",
                 "channel_adc": args.channel,
+                "i2c_address": f"0x{args.address:02x}",
                 "noise": {"value": noise, "unit": "ADC counts"},
                 "quality": quality,
             }

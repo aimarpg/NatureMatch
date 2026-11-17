@@ -187,10 +187,13 @@ after confirming A0, run:
 python src/naturematch/tools/hardware/read_noise.py --channel 0
 ```
 
-`--channel` selects a HAT ADC channel, not a BCM GPIO number. The default is ten
-attempts two seconds apart; `--samples`, `--interval` and `--station-id` can
-change those values. `--help` works without hardware dependencies. Each JSON line
-contains the station ID, UTC time, module/channel, raw value/unit and quality.
+`--channel` selects a HAT ADC channel, not a BCM GPIO number. The ADC I2C address
+defaults to `0x04`; override it with `--address 0x08` if that is the confirmed
+address of the attached HAT. The address is included in each JSON record. The
+default is ten attempts two seconds apart; `--samples`, `--interval` and
+`--station-id` can change those values. `--help` works without hardware
+dependencies. Each JSON line contains the station ID, UTC time, module/channel,
+I2C address, raw value/unit and quality.
 Failed reads produce `null` with `missing` or `invalid` quality; previous values
 are never reused. Driver messages go to stderr to preserve JSON output. Exit
 codes are 0 for all in-range reads, 1 for initialization or any read failure,
