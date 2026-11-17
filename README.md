@@ -171,6 +171,43 @@ python -m unittest discover -s tests/unit -p test_temperature_humidity_tool.py
 
 Physical sensor operation and Pi 5 compatibility have not been validated.
 
+### Standalone light sensor test
+
+The [light sensor test](src/naturematch/tools/hardware/read_light.py) targets the
+reported **Grove Light Sensor V1.2**, an analog module, through the Grove Base Hat.
+It uses `grove.adc.ADC.read_raw()` from
+[Seeed grove.py](https://github.com/Seeed-Studio/grove.py/blob/master/grove/adc.py)
+and reports experimental 12-bit ADC counts (0–4095), **not lux**. It does not
+support I2C light modules or integrate with station acquisition/storage.
+
+Confirm voltage/interface compatibility, wiring and Pi 5 driver support before
+use. A2 remains a provisional socket reservation. In a Raspberry Pi environment
+with compatible `grove.py` installed and Base Hat I2C configured, after confirming
+A2, run:
+
+```bash
+python src/naturematch/tools/hardware/read_light.py --channel 2
+```
+
+`--channel` selects a HAT ADC channel, not a BCM GPIO number. Like the temperature
+script, this defaults to ten attempts two seconds apart and accepts `--samples`,
+`--interval` and `--station-id`. The interval must be finite and positive.
+`--help` needs no hardware dependencies. Each JSON line contains station ID, UTC
+time, module/channel, raw value/unit and quality. Failed reads produce `null`
+with `missing` or `invalid` quality; previous values are never reused. Driver
+messages go to stderr to preserve JSON output. Exit codes are 0 for all in-range
+reads, 1 for initialization or any read failure, 2 for argument errors and 130
+for Ctrl+C during sampling. In-range readings remain experimental, and a numeric
+ADC result alone does not prove that the sensor is connected or accurate.
+
+Software-only checks with mocked ADC hardware:
+
+```bash
+python -m unittest discover -s tests/unit -p test_light_tool.py
+```
+
+Physical sensor operation and Pi 5 compatibility have not been validated.
+
 The repository contains project documentation and an initial source, configuration and tooling scaffold, including test files and unfinished sensor adapters. This supersedes the earlier documentation-only description; those files do not establish a working or hardware-validated application. Setup, wiring, execution and test instructions must be checked and updated as the Sprint 1 tasks are completed.
 
 - [Project proposal](Documents/IoTChallenge.pdf): system purpose, architecture, scope, risks and initial sprint plan.
