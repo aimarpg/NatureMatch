@@ -23,6 +23,12 @@ NatureMatch is a proposed Internet of Things system to help people choose nearby
 
 **Project status: proposal and planning, with an initial repository scaffold.** The hardware, software and features described below are planned work, not validated capabilities. This README summarizes the [project proposal](Documents/IoTChallenge.pdf).
 
+The repository now also contains a tested HTTP-ingest contract at
+`POST /api/v1/observations`. It validates the shared `Observation` records,
+handles retry duplicates by record ID and exposes per-station latest readings.
+The current implementation uses in-process memory; durable InfluxDB writing,
+station-to-API wiring and end-to-end hardware validation remain outstanding.
+
 ## Purpose and intended users
 
 Knowing where a park is does not tell someone whether its current conditions suit their plans. NatureMatch aims to reduce that uncertainty so students, university staff and citizens can make nearby nature part of everyday life. The initial setting is campus gardens and green spaces in Bilbao, with a longer-term vision of supporting additional parks and institutions.
