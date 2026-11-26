@@ -131,6 +131,31 @@ The dated plan selects infrared, temperature/humidity, noise and light for Sprin
 
 ## Repository and getting started
 
+### Standalone NFC payload test
+
+The [RFID2 diagnostic](src/naturematch/tools/hardware/read_nfc.py) targets the
+M5Stack Unit RFID2 (WS1850S, I²C address `0x28`). It detects NFC-A tags and
+reads a single Type 4 NDEF Text record, such as the text presented by an Android
+HCE emulator. Use the emulator's **Text** mode and enter a synthetic value.
+
+Run from the repository root on the Raspberry Pi with I²C enabled and `smbus2`
+installed in the Python environment. Confirm the reader's 5 V supply, wiring,
+and 3.3 V-safe I²C levels for your exact HAT before powering the setup.
+
+```bash
+python3 src/naturematch/tools/hardware/read_nfc.py --samples 60 --interval 0.5
+```
+
+Hold the unlocked phone near the reader with emulation active. The JSON line
+should show `"present": true` and `"payload": "activity=study"` under `card`.
+Remove the phone, change the text to `activity=socialise` and tap again to
+verify the new payload. A detected Type 4 tag whose text cannot be read reports
+`"payload": null` and an error. The diagnostic supports a single text record
+up to 1,024 NDEF bytes. Other NFC-A tags still report detection.
+
+The [software-only tests](tests/unit/test_nfc_tool.py) use a simulated reader
+and phone. The Pi, RFID2 and Android app still need a physical bench test.
+
 ### Standalone LCD test
 
 With the Pi powered off and unplugged, connect the **Grove 16x2 LCD (White on Blue)**

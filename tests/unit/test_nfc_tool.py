@@ -128,6 +128,62 @@ class SimulatedMFRC522Bus:
         self.closed = True
 
 
+class SimulatedType4Phone(SimulatedCard):
+    """Type 4 text tag with the same simulated UID across taps."""
+
+    def __init__(self, *messages):
+        super().__init__([UID_RANDOM] * len(messages))
+        self.messages = iter(messages)
+
+    def handle(self, frame, bits):
+        if bits == 7 and frame == b"\x52":
+            reply = super().handle(frame, bits)
+            if reply is not None:
+                message = next(self.messages)
+                record = b""
+                if message is not None:
+                    text = message.encode("utf-8")
+                    record = bytes([0xD1, 1, len(text) + 3]) + b"T\x02en" + text
+                self.ndef = len(record).to_bytes(2, "big") + record
+            return reply
+        if frame[0] in r.CASCADE_LEVELS:
+            reply = super().handle(frame, bits)
+            return b"\x20" + r.crc_a(b"\x20") if frame[1] == 0x70 else reply
+        if frame[:2] == b"\x50\x00":
+            return super().handle(frame, bits)
+        assert bits == 0 and r.crc_a(frame[:-2]) == frame[-2:]
+        request = frame[:-2]
+        if request == b"\xe0\x50":
+            self.block = 0
+            self.file = None
+            reply = b"\x02\x05"
+        elif request == b"\xc2":
+            reply = request
+        elif request == b"\xf2\x02":
+            reply = self.pending_reply
+        else:
+            pcb, command = request[0], request[1:]
+            assert pcb == 0x02 | self.block
+            self.block ^= 1
+            data = b""
+            if command == bytes.fromhex("00a4040007d276000085010100"):
+                self.pending_reply = bytes([pcb]) + b"\x90\x00"
+                reply = b"\xf2\x02"
+                return reply + r.crc_a(reply)
+            elif command == bytes.fromhex("00a4000c02e103"):
+                self.file = bytes.fromhex("000f20001000340406e10400ff00ff")
+            elif command == bytes.fromhex("00a4000c02e104"):
+                self.file = self.ndef
+            else:
+                assert command[:2] == b"\x00\xb0" and self.file is not None
+                offset = int.from_bytes(command[2:4], "big")
+                count = command[4]
+                assert count <= 16
+                data = self.file[offset:offset + count]
+            reply = bytes([pcb]) + data + b"\x90\x00"
+        return reply + r.crc_a(reply)
+
+
 class ReadNfcToolTest(unittest.TestCase):
     def run_tool(self, bus, *extra):
         fake = types.SimpleNamespace(SMBus=mock.Mock(return_value=bus))
@@ -142,6 +198,26 @@ class ReadNfcToolTest(unittest.TestCase):
     def test_crc_a_known_values(self):
         self.assertEqual(r.crc_a(b"\x00\x00"), bytes.fromhex("a01e"))
         self.assertEqual(r.crc_a(b"\x50\x00"), bytes.fromhex("57cd"))   # HLTA
+
+    def test_type4_phone_reports_changed_text(self):
+        phone = SimulatedType4Phone("activity=study", "activity=socialise")
+        code, records, _ = self.run_tool(SimulatedMFRC522Bus(phone), "--samples", "3")
+        self.assertEqual(code, 0)
+        self.assertEqual([record["card"].get("payload") for record in records],
+                         ["activity=study", "activity=socialise", None])
+        self.assertEqual(records[2]["card"], {"present": False})
+
+    def test_type4_phone_reports_empty_ndef_and_recovers(self):
+        phone = SimulatedType4Phone("activity=study", None, "activity=socialise")
+        bus = SimulatedMFRC522Bus(phone)
+        code, records, _ = self.run_tool(bus, "--samples", "3")
+        self.assertEqual(code, 1)
+        self.assertTrue(records[1]["card"]["present"])
+        self.assertIsNone(records[1]["card"]["payload"])
+        self.assertEqual(records[1]["quality"], "invalid")
+        self.assertIn("no NDEF message", records[1]["error"])
+        self.assertEqual(records[2]["card"]["payload"], "activity=socialise")
+        self.assertTrue(bus.antenna_on)
 
     def test_help_needs_no_smbus(self):
         with mock.patch.dict(sys.modules, {"smbus2": None}), \
