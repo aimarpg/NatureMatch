@@ -16,6 +16,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--channel", default=2, type=int, help="Confirmed HAT ADC channel (A2=2)")
     parser.add_argument("--station-id", default="sensor-test")
+    parser.add_argument(
+            "--address", default=0x08, type=lambda value: int(value, 0),
+            help="7-bit HAT ADC I2C address (default: 0x04)",
+        )
     parser.add_argument("--samples", type=int, default=10, help="Number of attempts (default: 10)")
     parser.add_argument("--interval", type=float, default=2.0, help="Seconds between attempts (>0)")
     args = parser.parse_args(argv)
@@ -33,7 +37,7 @@ def main(argv=None):
         with contextlib.redirect_stdout(sys.stderr):
             from grove.adc import ADC
 
-            adc = ADC()
+            adc = ADC(address=args.address)
     except (Exception, SystemExit) as exc:
         print(f"Cannot initialize light sensor ADC: {exc}. Check grove.py installation, "
               "Base Hat/I2C setup and Pi 5 driver compatibility.", file=sys.stderr)

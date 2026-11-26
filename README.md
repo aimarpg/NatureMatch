@@ -2,7 +2,7 @@
 IoT station (Raspberry Pi 5) + API + activity assessment + Grafana. See `docs/`.
 
 ## Layout
-- `src/naturematch/station`    sensors, IR counter, LED  (runs on the Pi)
+- `src/naturematch/station`    sensors, entrance counting and local feedback (Pi scaffold)
 - `src/naturematch/common`     shared data model (Observation, Quality, units)
 - `src/naturematch/service`    HTTP/JSON API + InfluxDB persistence
 - `src/naturematch/assessment` access filter + activity profiles (pure logic)
@@ -13,7 +13,7 @@ IoT station (Raspberry Pi 5) + API + activity assessment + Grafana. See `docs/`.
 
 Follow the [Sprint 1 task guide](docs/scrum/sprint-1.md) for the setup tasks, sensor tests and starting order. The existing scaffold and its commands need to be checked in [#47](https://github.com/aimarpg/NatureMatch/issues/47) before they are presented as verified installation instructions.
 
-**Hardware update (15 November 2026):** the available counting hardware is two ultrasonic distance sensors, replacing the proposal's infrared pairs. The reported inventory also includes light, temperature/humidity, sound and an NFC reader. See the [wiring and pin inventory](docs/hardware/pin-inventory.md) for proposed socket reservations, required model/voltage checks and the revised counting test approach. Exact module revisions and Pi 5 driver compatibility remain unverified. The original PDFs and infrared scaffold have not been converted into an ultrasonic implementation; descriptions of infrared below refer to the original proposal. NFC remains optional for the MVP, and availability of the planned LED bar and activity selector is unconfirmed.
+**Hardware update (19 November 2026)** The available counting hardware is two ultrasonic distance sensors, replacing the proposal's infrared pairs. A Grove 16x2 LCD (White on Blue) replaces the proposal's LED bar for local feedback. The reported inventory also includes light, temperature/humidity, sound and an optional NFC reader. Availability of the activity selector is unconfirmed. See the [wiring and pin inventory](docs/hardware/pin-inventory.md) for socket reservations and compatibility checks. The infrared and LED bar references in the project description below reflect the original proposal and planning documents.
 
 # Project description
 
@@ -131,6 +131,35 @@ The dated plan selects infrared, temperature/humidity, noise and light for Sprin
 
 ## Repository and getting started
 
+### Standalone LCD test
+
+With the Pi powered off and unplugged, connect the **Grove 16x2 LCD (White on Blue)**
+to any **I2C** socket on the Grove Base Hat. Use the four-pin Grove cable.
+The display uses 3.3 V from the HAT and address `0x3E` on I2C bus 1.
+See the [pin inventory](docs/hardware/pin-inventory.md#connecting-the-lcd).
+
+After powering up, enable I2C under **Interface Options → I2C** in
+`sudo raspi-config` if needed. From the repository root, run the
+[LCD test script](src/naturematch/tools/hardware/test_lcd.py) in your Pi Python
+environment. If the environment lacks `smbus2`, install it there with
+`python -m pip install smbus2`.
+
+```bash
+python src/naturematch/tools/hardware/test_lcd.py
+```
+
+Look for `NatureMatch` on the top row and `1234567890123456` on the bottom row.
+The script leaves both lines on the display. Use `--line1 "your text"` and
+`--line2 "your text"` to replace the defaults. Each line accepts up to 16
+printable ASCII characters. `--help` works without `smbus2`.
+
+If the script reports a write error, check that `/dev/i2c-1` exists and that
+your account can access it. If `i2c-tools` is installed, use
+`i2cdetect -y 1 0x3e 0x3e` to check for the LCD address. The script uses the
+[Seeed JHD1802 I2C protocol](https://github.com/Seeed-Studio/grove.py/blob/master/grove/display/jhd1802.py)
+through `smbus2`. Software checks use a mocked I2C bus. Physical operation on the
+Pi 5 and integration with station feedback still need validation.
+
 ### Standalone temperature/humidity test
 
 The [base sensor test](src/naturematch/tools/hardware/read_temperature_humidity.py)
@@ -244,6 +273,90 @@ python -m unittest discover -s tests/unit -p test_light_tool.py
 ```
 
 Physical sensor operation and Pi 5 compatibility have not been validated.
+
+### Standalone ultrasonic distance test
+
+The [ultrasonic sensor test](src/naturematch/tools/hardware/read_ultrasonic.py)
+targets the **Grove Ultrasonic Distance Sensor V2.0**, confirmed by the user on
+17 November 2026, connected through the Grove Base Hat. This implements a distance
+diagnostic for the revised hardware inventory; the original proposal uses infrared.
+It does not implement crossing detection, occupancy counting or station integration.
+
+Confirm voltage/interface compatibility, actual socket wiring and Pi 5 driver
+support before use. D5 and D18 remain provisional reservations, using BCM numbers,
+not physical header positions. With compatible `grove.py` installed, **if the
+sensor's signal is confirmed on D5/BCM 5**, run:
+
+```bash
+python src/naturematch/tools/hardware/read_ultrasonic.py --pin 5
+```
+
+Use `--pin 18` only for a sensor confirmed on D18/BCM 18. Test each sensor
+separately; avoid running two copies together because ultrasonic transmissions
+can interfere. This script supports the single-SIG Grove ranger, not separate
+TRIG/ECHO modules or GrovePi+ interfaces. Power down before changing connections,
+as the [manufacturer warns against hot plugging](https://wiki.seeedstudio.com/Grove-Ultrasonic_Ranger/).
+
+The format matches the other diagnostics: ten attempts, two seconds apart by
+default; `--samples`, `--interval` and `--station-id` override these. `--pin` is
+required and `--help` needs no hardware dependencies. Each JSON line includes
+station ID, UTC time, model, BCM pin, distance in cm and quality. Values within
+the manufacturer's specified 2–350 cm range remain `experimental`; no echo or
+read failures produce `null` with `missing` quality, while malformed/out-of-range
+values produce `null` with `invalid` quality. No earlier reading is reused.
+Driver messages go to stderr. Exit codes are 0 for all in-range reads, 1 for
+initialization or any reading failure, 2 for invalid arguments and 130 for Ctrl+C
+during sampling.
+
+The script intentionally calls the driver's private `_get_distance()` method for
+one attempt: the public `get_distance()` retries indefinitely on missing echoes.
+Recheck this interface when upgrading
+[Seeed grove.py](https://github.com/Seeed-Studio/grove.py/blob/master/grove/grove_ultrasonic_ranger.py).
+The driver times pulses in software; its iteration limits are not a strict
+wall-clock timeout and timing/accuracy on Pi 5 remain unverified.
+
+Software-only checks with mocked hardware:
+
+```bash
+python -m unittest discover -s tests/unit -p test_ultrasonic_tool.py
+```
+
+For a physical bench check, compare readings to manually measured distances at
+several points within the specified range using a broad, flat target; record
+errors and missing readings. Repeat separately for each sensor. No physical
+sensor operation, calibrated accuracy or Pi 5 compatibility has been validated here.
+
+### Paired ultrasonic distance test
+
+The [paired ultrasonic test](src/naturematch/tools/hardware/read_ultrasonic_pair.py)
+reads the same Grove V2.0 modules on **BCM 5 and BCM 18**, combining both results
+in one JSON line per pair. After checking voltage, socket wiring and driver
+compatibility, run in the same Raspberry Pi environment:
+
+```bash
+python src/naturematch/tools/hardware/read_ultrasonic_pair.py
+```
+
+Defaults are ten pairs, with two seconds after each pair. `--samples`,
+`--interval` (at least 0.1 seconds) and `--station-id` are supported.
+The script reads BCM 5, waits 0.1 seconds, then reads BCM 18. This is initial
+bench-test spacing to limit interference, not validated acoustic isolation.
+Do not run other ultrasonic diagnostics concurrently.
+
+The combined record has station ID, emission time, model and a `sensors` array.
+Each sensor retains its BCM pin, individual UTC observation time, distance in cm,
+quality and optional error. These are sequential readings, not simultaneous
+measurements or an averaged distance. A failed read becomes `null` without
+discarding the other sensor's reading or reusing earlier values. Range checks,
+private single-attempt driver usage and exit codes match the single-sensor test.
+If initialization fails, no measurement records are emitted. No crossing or
+occupancy logic is included, and physical operation remains unverified.
+
+Software-only checks:
+
+```bash
+python -m unittest discover -s tests/unit -p 'test_ultrasonic*tool.py'
+```
 
 The repository contains project documentation and an initial source, configuration and tooling scaffold, including test files and unfinished sensor adapters. This supersedes the earlier documentation-only description; those files do not establish a working or hardware-validated application. Setup, wiring, execution and test instructions must be checked and updated as the Sprint 1 tasks are completed.
 

@@ -1,0 +1,3 @@
+[console_scripts]
+nm-api = naturematch.service.main:main
+nm-station = naturematch.station.main:main

@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: naturematch
+Version: 0.1.0
+Requires-Python: >=3.11
+License-File: LICENSE
+Requires-Dist: pydantic>=2
+Requires-Dist: pydantic-settings>=2
+Requires-Dist: pyyaml
+Requires-Dist: fastapi
+Requires-Dist: uvicorn[standard]
+Requires-Dist: httpx
+Requires-Dist: influxdb-client
+Provides-Extra: pi
+Requires-Dist: gpiozero; extra == "pi"
+Requires-Dist: lgpio; extra == "pi"
+Requires-Dist: grove.py; extra == "pi"
+Requires-Dist: smbus2; extra == "pi"
+Requires-Dist: seeed-python-dht; extra == "pi"
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"
+Dynamic: license-file
