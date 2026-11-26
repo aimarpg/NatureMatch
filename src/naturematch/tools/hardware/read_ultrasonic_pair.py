@@ -22,7 +22,8 @@ def read_sensor(sensor, pin):
             distance = sensor._get_distance()
         if distance is None:
             quality, error = "missing", "No echo reading (driver timeout)"
-        elif (isinstance(distance, bool) or not math.isfinite(distance)):
+        elif (isinstance(distance, bool) or not math.isfinite(distance)
+              or not 2 <= distance <= 350):
             quality, error = "invalid", "Nonfinite or outside the specified 2-350 cm range"
     except (TypeError, ValueError) as exc:
         quality, error = "invalid", str(exc)

@@ -358,6 +358,58 @@ Software-only checks:
 python -m unittest discover -s tests/unit -p 'test_ultrasonic*tool.py'
 ```
 
+### Standalone ultrasonic people counter
+
+The [people counter](src/naturematch/tools/count_people.py) reads JSON lines from
+the paired ultrasonic diagnostic and adds the detected zone, crossing direction,
+and estimated occupancy to each record. The crossing logic lives in
+[the station counter package](src/naturematch/station/counter/). It runs locally
+with Python 3.11 or newer. Live acquisition also needs the working Grove setup
+described above. The station runner and API integration are still scaffolded.
+
+From the repository root, test with simulated sensor readings. This command
+needs no third-party packages or Pi.
+
+~~~bash
+PYTHONPATH=src python -m unittest discover -s tests/unit -p test_people_counter.py
+~~~
+
+On the Pi, first verify both distances using the paired diagnostic. For the
+counting run, use a sheltered, single-file test passage with A on the outside and
+B on the inside. Aim the sensors across the passage so each returns a stable
+background distance when clear. Check that a walking person can activate each
+zone on its own and briefly activate both between them. Use the measured
+near-person and empty-passage distances to set separate enter and clear thresholds
+for each zone, with the enter threshold lower than the clear threshold.
+
+Start with both zones clear and a known headcount. In the example below, the
+test area has been confirmed empty and the wiring verified at BCM 5 and BCM 18.
+**Replace the example thresholds with values measured for your passage.**
+The logger waits 0.1 seconds between pings and another 0.1 seconds between pairs.
+Run from the repository root in the same Pi environment as the paired diagnostic.
+
+~~~bash
+python src/naturematch/tools/hardware/read_ultrasonic_pair.py --samples 600 --interval 0.1 \
+  | tee crossing-pairs.jsonl \
+  | PYTHONPATH=src python -m naturematch.tools.count_people --initial-count 0 \
+      --a-enter-cm 65 --a-clear-cm 75 --b-enter-cm 80 --b-clear-cm 90
+~~~
+
+An entry emits **in** and increases the count by one after the sequence
+**clear → A → both → B → clear**. An exit reverses that sequence. Reversals,
+skipped states, and crossings that take longer than 2.5 seconds are discarded.
+An unknown reading or a gap over 0.5 seconds discards any active crossing.
+After an unknown reading, a sampling gap, or an exit at zero, the estimate
+stays marked **stale** until you reconcile against a manual count and restart
+with a known headcount. The numeric value continues to reflect observed crossings.
+Use **--help** for timing options. To replay a run, run the counter command
+alone with input redirected from **crossing-pairs.jsonl**.
+
+Use the [entrance validation protocol](docs/validation/protocol.md) to compare
+directions and counts against a manual tally. The two sensors are read
+sequentially, so fast or closely spaced crossings may skip a required state.
+Physical timing, placement, and count accuracy remain unverified.
+
 The repository contains project documentation and an initial source, configuration and tooling scaffold, including test files and unfinished sensor adapters. This supersedes the earlier documentation-only description; those files do not establish a working or hardware-validated application. Setup, wiring, execution and test instructions must be checked and updated as the Sprint 1 tasks are completed.
 
 - [Project proposal](Documents/IoTChallenge.pdf): system purpose, architecture, scope, risks and initial sprint plan.
